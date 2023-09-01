@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+
+@model HomeViewModel
+
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- Main Content Area -->
+        <main class="col-12 px-md-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mt-3">Welcome to the Dashboard</h1>              
+            </div>
+
+            <!-- Form positioned at the far right -->
+            <form id="myForm" asp-action="TranslateText" method="post" style="display: flex;
+                            grid-gap: 20px;
+                           padding: 2% 0;
+                            align-items: flex-end;
+                                    ">
+                <!-- Input field with label -->
+                <div class="form-group">
+                    <label for="searchInput">Translate Text</label>
+                    <input type="text" class="form-control" id="searchInput" asp-for="Translation.TextToTranslate" placeholder="Translate">
+                </div>
+
+                <!-- Select list with label -->
+                <div class="form-group">
+                    <label for="selectTranslation">Select Translation Type</label>
+                    <select class="custom-select form-control required" id="modelList" asp-for="@Model.Translation.TranslationTYpeId" asp-items="@Model.Translation.Translations">
+                        <option value="">Select a translation...</option>
+                    </select>
+         
+                </div>
+
+                <button type="button" class="btn btn-primary" id="submitForm">Translate Text</button>
+            </form>
+
+            <div id="messageDiv" class="alert alert-success" style="display: none;"></div>
+
+            <table id="myTable" class="display">
+                <thead>
+                    <tr>
+                        <th>Text</th>
+                        <th>TranslatedText</th>
+                        <th>Status</th>
+                        <th>TranslationType</th>
+                        <!-- Add other table headers here -->
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Responses)
+                    {
+                        <tr>
+                            <td>@item.Text</td>
+                            <td>@item.TranslatedText</td>
+                            @if(item.Status.Name == "Success")
+                            {
+                                <td class="alert-success">@item.Status.Name</td>
+
+                            }
+                            else
+                            {
+                                <td class="alert-danger">@item.Status.Name</td>
+
+                            }
+                            <td>@item.Translation.Name</td>
+                            <!-- Add other table data here -->
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Add your content here -->
+        </main>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#myTable').DataTable();
+
+
+        $('#submitForm').click(function () {
+            var formData = $('#myForm').serialize();
+            console.log(formData)
+            $.ajax({
+                type: 'POST',
+                url: "/Home/TranslateText",
+                data: formData,
+                success: function (data) {
+                    // Show the success message
+                    console.log("the data", data)
+                    $('#messageDiv').removeClass('alert-danger').addClass('alert-success');
+                    $('#messageDiv').text('Translation: ' + data.translated); // Set your success message here
+                    $('#messageDiv').show();
+
+                    // Update the DataTable with new data
+                    var newRowData = [
+                        data.text,
+                        data.translated,
+                        "Success",
+                        data.translation
+                    ];
+
+                      $('#myTable').DataTable().row.add(newRowData).draw(); // Add and draw new data
+                },
+                error: function (error) {
+                    // Show an error message
+                    $('#messageDiv').removeClass('alert-success').addClass('alert-danger');
+                    $('#messageDiv').text('Translation failed: An occurred processing your request'); // Set your error message here
+                    $('#messageDiv').show();
+                }
+            });
+        });
+    });
+
+
+</script>
+
